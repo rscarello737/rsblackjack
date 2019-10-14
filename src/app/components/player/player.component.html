@@ -1,0 +1,92 @@
+<div class="player-component container" *ngIf="!player.isDealer || (player.gameModeOn && player.isDealer && player.cards !== undefined && player.cards.length)">
+  <div class="player-edit" *ngIf="!player.gameModeOn">
+    <h1 class="player-name">Player {{player.id + 1 }}</h1>
+    <div class="form-group">
+      <label for="playerName">Name</label>
+      <input class="form-control" [(ngModel)]="player.name" id="playerName" placeholder="Player's name" name="playerName" required
+             #playerName="ngModel" autocomplete="off">
+      <div [hidden]="playerName.valid || playerName.pristine" class="alert alert-danger">You must enter a name!</div>
+    </div>
+
+    <div class="form-group">
+      <label for="playerBankroll">Available bankroll</label>
+      <input class="form-control"
+             id="playerBankroll"
+             placeholder="Player's money"
+             [value]="player.bankroll > 0 ? player.bankroll:''"
+             (input)="restrictBankrollInputToNumber($event.target)"
+             name="playerBankroll"
+             required
+             #playerBankroll
+             autocomplete="off"
+      >
+
+      <div [hidden]="playerBankroll.valid || playerBankroll.pristine" class="alert alert-danger">Specify player's
+        bankroll
+      </div>
+    </div>
+  </div>
+
+  <!--Below is the HTML displayed when the game is on! -->
+  <div class="player-gameon" *ngIf="(player.gameModeOn && !player.isDealer) || (player.gameModeOn && player.isDealer && player.cards !== undefined && player.cards.length)">
+
+    <!--Special overlays when the player won or lost -->
+    <div *ngIf="(player.bust || player.winnerOfRound) && !player.isDealer"
+         [class]="player.bust ? 'player-overlay lost':'player-overlay won'">
+      <div class="player-background-hider"></div>
+      <div *ngIf="player.bust" class="player-overlay-message">You lost {{player.currentBetValue | currency}}</div>
+      <div *ngIf="player.winnerOfRound" class="player-overlay-message">
+        <div *ngIf="player.naturalBlackjack" class="natural-blackjack-notification">BLACKJACK !!!</div>
+        You won {{player.amountWon | currency}}
+      </div>
+    </div>
+
+    <div class="player-header">
+      <span class="player-name">{{player.name}}</span>
+      <span *ngIf="!player.isDealer" class="player-bankroll">{{player.bankroll | currency}}</span>
+    </div>
+    <div *ngIf="!player.isDealer" class="betting-amount">
+      <div *ngIf="!player.isDealer" class="total-bet-container">
+        <span>Bet for this round</span>
+        <span class="total-bet-value">{{player.currentBetValue | currency}}</span>
+      </div>
+      <ul *ngIf="player.cards === undefined || !player.cards.length && player.bankroll > 0" class="betting-options">
+        <li>
+          <button title="bet 5" [disabled]="player.bankroll === 0" type="button" class="betting-value five" (click)="bet(5)"></button>
+        </li>
+        <li>
+          <button title="bet 10" [disabled]="player.bankroll < 10"
+                  [class]="player.bankroll < 10 ? 'betting-value ten disabled':'betting-value ten'"
+                  type="button" class="betting-value ten" (click)="bet(10)"></button>
+        </li>
+        <li>
+          <button title="bet 20" [disabled]="player.bankroll < 20"
+                  [class]="player.bankroll < 20 ? 'betting-value twenty disabled':'betting-value twenty'" type="button"
+                  class="betting-value twenty"
+                  (click)="bet(20)"></button>
+        </li>
+      </ul>
+      <button title="reset bet" *ngIf="player.currentBetValue>0 && (player.cards === undefined || !player.cards.length)"
+              class="btn btn-danger" (click)="resetBet()">Reset bet
+      </button>
+    </div>
+    <div class="player-cards-container">
+      <ul class="player-cards-list">
+        <li *ngFor="let card of player.cards"
+            class="playing-card card-suit-{{card.suit}} card-value-{{card.classicValue}}">
+        </li>
+      </ul>
+      <div *ngIf="player.cards !== undefined && player.cards.length" class="player-points">
+        <span>Points</span>
+        <span class="player-points-value">{{player.points}}</span>
+      </div>
+    </div>
+    <div
+      *ngIf="!player.isDealer && player.cards !== undefined && player.cards.length && !player.bust && !player.blackjack && !player.standing"
+      class="player-action-buttons">
+      <button title="deal cards" class="btn btn-success" (click)="dealCard()">Deal card</button>
+      <button title="stand" class="btn btn-danger" (click)="stand()">Stand</button>
+    </div>
+  </div>
+
+</div>
